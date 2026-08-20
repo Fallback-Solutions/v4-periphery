@@ -30,7 +30,7 @@ contract V4RouterExactOutputUnfilledTest is RoutingTestHelpers {
     function test_exactOutputSingle_revertsOnUnderfill() public {
         // buy currency0 by selling currency1 (oneForZero); the thin band cannot deliver 1e18 out
         IV4Router.ExactOutputSingleParams memory params =
-            IV4Router.ExactOutputSingleParams(thinKey, false, 1 ether, type(uint128).max, 0, bytes(""));
+            IV4Router.ExactOutputSingleParams(thinKey, false, 1 ether, type(uint128).max, bytes(""));
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currency1, currency0, ActionConstants.MSG_SENDER);
 
@@ -86,7 +86,7 @@ contract V4RouterExactOutputUnfilledTest is RoutingTestHelpers {
         // the deep pool (key0) fully fills, unchanged by the new guard
         uint256 amountOut = 1 ether;
         IV4Router.ExactOutputSingleParams memory params =
-            IV4Router.ExactOutputSingleParams(key0, true, uint128(amountOut), type(uint128).max, 0, bytes(""));
+            IV4Router.ExactOutputSingleParams(key0, true, uint128(amountOut), type(uint128).max, bytes(""));
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
 
         (, uint256 outputBalanceBefore,, uint256 outputBalanceAfter) =

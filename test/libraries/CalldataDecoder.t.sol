@@ -133,7 +133,6 @@ contract CalldataDecoderTest is Test {
         assertEq(swapParams.zeroForOne, _swapParams.zeroForOne);
         assertEq(swapParams.amountIn, _swapParams.amountIn);
         assertEq(swapParams.amountOutMinimum, _swapParams.amountOutMinimum);
-        assertEq(swapParams.minHopPriceX36, _swapParams.minHopPriceX36);
         assertEq(swapParams.hookData, _swapParams.hookData);
         _assertEq(swapParams.poolKey, _swapParams.poolKey);
     }
@@ -166,7 +165,6 @@ contract CalldataDecoderTest is Test {
         assertEq(swapParams.zeroForOne, _swapParams.zeroForOne);
         assertEq(swapParams.amountOut, _swapParams.amountOut);
         assertEq(swapParams.amountInMaximum, _swapParams.amountInMaximum);
-        assertEq(swapParams.minHopPriceX36, _swapParams.minHopPriceX36);
         assertEq(swapParams.hookData, _swapParams.hookData);
         _assertEq(swapParams.poolKey, _swapParams.poolKey);
     }

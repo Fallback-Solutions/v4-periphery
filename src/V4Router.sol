@@ -91,12 +91,6 @@ abstract contract V4Router is IV4Router, BaseActionsRouter, DeltaResolver {
             _swap(params.poolKey, params.zeroForOne, -int256(uint256(amountIn)), params.hookData), params.zeroForOne
         );
         if (amountOut < params.amountOutMinimum) revert V4TooLittleReceived(params.amountOutMinimum, amountOut);
-        if (params.minHopPriceX36 != 0) {
-            uint256 priceX36 = uint256(amountOut) * PRECISION / amountIn;
-            if (priceX36 < params.minHopPriceX36) {
-                revert V4TooLittleReceivedPerHopSingle(params.minHopPriceX36, priceX36);
-            }
-        }
     }
 
     function _swapExactInput(IV4Router.ExactInputParams calldata params) private {
@@ -148,14 +142,6 @@ abstract contract V4Router is IV4Router, BaseActionsRouter, DeltaResolver {
         if (amountOutActual < amountOut) revert V4ExactOutputUnfilled(amountOut, amountOutActual);
         uint128 amountIn = _swapInput(delta, params.zeroForOne);
         if (amountIn > params.amountInMaximum) revert V4TooMuchRequested(params.amountInMaximum, amountIn);
-        // a hook can fund the whole input, leaving a positive output against a zero input. The realized
-        // price is then infinite and clears every finite bound, so skip the division rather than panic.
-        if (params.minHopPriceX36 != 0 && amountIn != 0) {
-            uint256 priceX36 = uint256(amountOutActual) * PRECISION / amountIn;
-            if (priceX36 < params.minHopPriceX36) {
-                revert V4TooMuchRequestedPerHopSingle(params.minHopPriceX36, priceX36);
-            }
-        }
     }
 
     function _swapExactOutput(IV4Router.ExactOutputParams calldata params) private {

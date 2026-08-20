@@ -125,7 +125,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -141,7 +141,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 amountIn = 1000;
         // key2 is currency2/currency3 with no hook — neither side is a permissions adapter
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key2, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key2, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key2.currency0, key2.currency1, ActionConstants.MSG_SENDER);
@@ -202,7 +202,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         PoolKey memory adapterKey = PoolKey(currencyA, currencyB, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currencyA, currencyB, ActionConstants.MSG_SENDER);
@@ -238,7 +238,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         // ordinary token in, permissioned adapter out — the direction the router never used to check
         bool zeroForOne = currencyA == currency4;
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(hooklessKey, zeroForOne, 1 ether, 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(hooklessKey, zeroForOne, 1 ether, 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currency4, permissionsAdapter0Currency, ActionConstants.MSG_SENDER);
@@ -255,7 +255,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         IERC20(Currency.unwrap(currency1)).transfer(alice, 2 ether);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(insecureKey, true, uint128(1 ether), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(insecureKey, true, uint128(1 ether), 0, bytes(""));
 
         // insecureHooks is allow-listed in setUp, so this identical swap succeeds
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -315,7 +315,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -382,7 +382,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         bool zeroForOne = mixedInsecureKey.currency0 == currency2;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(mixedInsecureKey, zeroForOne, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(mixedInsecureKey, zeroForOne, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currency2, permissionsAdapter0Currency, ActionConstants.MSG_SENDER);
@@ -410,7 +410,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         bool zeroForOne = mixedInsecureKey.currency0 == currency2;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(mixedInsecureKey, zeroForOne, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(mixedInsecureKey, zeroForOne, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currency2, permissionsAdapter0Currency, ActionConstants.MSG_SENDER);
@@ -429,7 +429,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -449,7 +449,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -475,7 +475,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -514,7 +514,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             getPermissionedCurrency(key1.currency1).transfer(alice, 2 ether);
         }
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key1, zeroToOne, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key1, zeroToOne, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(inputCurrency, outputCurrency, ActionConstants.MSG_SENDER);
@@ -550,7 +550,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         }
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key1, zeroToOne, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key1, zeroToOne, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(inputCurrency, outputCurrency, ActionConstants.MSG_SENDER);
@@ -589,7 +589,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 amountIn = 100;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key1, zeroToOne, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key1, zeroToOne, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(inputCurrency, outputCurrency, ActionConstants.MSG_SENDER);
@@ -626,7 +626,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         }
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key1, zeroToOne, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key1, zeroToOne, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(inputCurrency, outputCurrency, ActionConstants.MSG_SENDER);
@@ -654,7 +654,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -678,7 +678,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, insecureHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -703,7 +703,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -727,7 +727,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -747,7 +747,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -776,7 +776,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -800,7 +800,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -830,7 +830,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -870,7 +870,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 amountIn = 100;
         plan = Planner.init();
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(poolKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(poolKey, true, uint128(amountIn), 0, bytes(""));
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         plan = plan.add(Actions.SETTLE, abi.encode(poolKey.currency0, ActionConstants.CONTRACT_BALANCE, false));
         plan = plan.add(Actions.TAKE_ALL, abi.encode(poolKey.currency1, 0));
@@ -894,7 +894,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            adapterKey, true, uint128(amountOut), uint128(amountInMaximum), 0, bytes("")
+            adapterKey, true, uint128(amountOut), uint128(amountInMaximum), bytes("")
         );
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
@@ -952,7 +952,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -970,9 +970,8 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 amountIn = 1 ether;
         uint256 expectedAmountOut = 19992;
         // min amount out of 1 higher than the actual amount out
-        IV4Router.ExactInputSingleParams memory params = IV4Router.ExactInputSingleParams(
-            key0, true, uint128(amountIn), uint128(expectedAmountOut + 1), 0, bytes("")
-        );
+        IV4Router.ExactInputSingleParams memory params =
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), uint128(expectedAmountOut + 1), bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
@@ -988,7 +987,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 expectedAmountOut = 19992;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         (uint256 inputBalanceBefore, uint256 outputBalanceBefore,) =
@@ -1013,7 +1012,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 expectedAmountOut = 19992;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
 
@@ -1040,7 +1039,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 expectedAmountOut = 19992;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
 
@@ -1066,7 +1065,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 expectedAmountOut = 949;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, bytes(""));
 
         Currency inputCurrency = getPermissionedCurrency(key0.currency0);
         Currency outputCurrency = getPermissionedCurrency(key0.currency1);
@@ -1094,7 +1093,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         bool zeroForOne = false;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, zeroForOne, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, zeroForOne, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
 
@@ -1290,7 +1289,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 expectedAmountOut = 19992;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(nativeKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(nativeKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
 
@@ -1320,7 +1319,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
 
         // native output means we need !zeroForOne
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(nativeKey, zeroForOne, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(nativeKey, zeroForOne, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
 
@@ -1488,7 +1487,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         vm.deal(address(permissionedRouter), amountIn);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(nativeKey, zeroForOne, ActionConstants.OPEN_DELTA, 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(nativeKey, zeroForOne, ActionConstants.OPEN_DELTA, 0, bytes(""));
 
         plan = plan.add(Actions.SETTLE, abi.encode(nativeKey.currency0, ActionConstants.CONTRACT_BALANCE, false));
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -1519,9 +1518,8 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 amountOut = 19992;
         uint256 expectedAmountIn = 434604409;
 
-        IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            key0, true, uint128(amountOut), uint128(expectedAmountIn - 1), 0, bytes("")
-        );
+        IV4Router.ExactOutputSingleParams memory params =
+            IV4Router.ExactOutputSingleParams(key0, true, uint128(amountOut), uint128(expectedAmountIn - 1), bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
@@ -1538,7 +1536,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         bool zeroForOne = true;
 
         IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            key0, zeroForOne, uint128(amountOut), uint128(expectedAmountIn + 1), 0, bytes("")
+            key0, zeroForOne, uint128(amountOut), uint128(expectedAmountIn + 1), bytes("")
         );
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
@@ -1570,7 +1568,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         bool zeroForOne = false;
 
         IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            key0, zeroForOne, uint128(amountOut), uint128(expectedAmountIn + 1), 0, bytes("")
+            key0, zeroForOne, uint128(amountOut), uint128(expectedAmountIn + 1), bytes("")
         );
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
@@ -1905,7 +1903,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         uint256 expectedOutput = 900;
 
         IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            key0, true, ActionConstants.OPEN_DELTA, uint128(expectedAmountIn), 0, bytes("")
+            key0, true, ActionConstants.OPEN_DELTA, uint128(expectedAmountIn), bytes("")
         );
 
         plan = plan.add(Actions.TAKE, abi.encode(key0.currency1, ActionConstants.ADDRESS_THIS, expectedOutput));
@@ -1961,7 +1959,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         bool zeroForOne = false;
 
         IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            nativeKey, zeroForOne, uint128(amountOut), uint128(expectedAmountIn + 1), 0, bytes("")
+            nativeKey, zeroForOne, uint128(amountOut), uint128(expectedAmountIn + 1), bytes("")
         );
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
@@ -2025,7 +2023,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         IERC20(Currency.unwrap(key2.currency0)).transfer(address(permissionedRouter), amountIn);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key2, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key2, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SETTLE, abi.encode(key2.currency0, ActionConstants.CONTRACT_BALANCE, false));
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -2054,7 +2052,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
         IERC20(Currency.unwrap(getPermissionedCurrency(key0.currency0))).transfer(address(permissionedRouter), amountIn);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SETTLE, abi.encode((key0.currency0), ActionConstants.CONTRACT_BALANCE, false));
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -2091,7 +2089,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             .setAllowlist(unauthorizedUser, PermissionFlags.NONE);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SETTLE, abi.encode((key0.currency0), ActionConstants.CONTRACT_BALANCE, false));
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -2234,7 +2232,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(adapterKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data =
@@ -2270,7 +2268,7 @@ contract PermissionedV4RouterTest is PermissionedRoutingTestHelpers {
             PoolKey(permissionsAdapter1Currency, permissionsAdapter0Currency, 3000, 60, permissionedHooks);
 
         IV4Router.ExactOutputSingleParams memory params =
-            IV4Router.ExactOutputSingleParams(adapterKey, true, uint128(amountOut), type(uint128).max, 0, bytes(""));
+            IV4Router.ExactOutputSingleParams(adapterKey, true, uint128(amountOut), type(uint128).max, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
         bytes memory data =

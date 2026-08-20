@@ -46,27 +46,6 @@ contract V4RouterHookFundedExactOutputTest is RoutingTestHelpers {
         MockERC20(Currency.unwrap(currency3)).mint(hookAddr, 2 ** 120);
     }
 
-    /// @notice Previously panicked 0x12 on `amountOutActual * PRECISION / amountIn`.
-    function test_exactOutputSingle_hookFundsInput_withMinHopPrice_succeeds() public {
-        uint128 amountOut = 1 ether;
-        IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams({
-            poolKey: hookKey,
-            zeroForOne: true,
-            amountOut: amountOut,
-            amountInMaximum: type(uint128).max,
-            // realized price is infinite when the input is zero, so any finite bound must pass
-            minHopPriceX36: type(uint256).max,
-            hookData: bytes("")
-        });
-        plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
-
-        (uint256 inputBefore, uint256 outputBefore, uint256 inputAfter, uint256 outputAfter) =
-            _finalizeAndExecuteSwap(currency0, currency1, 0);
-
-        assertEq(inputBefore, inputAfter);
-        assertEq(outputAfter - outputBefore, amountOut);
-    }
-
     /// @notice The zero-input path must still be reachable with the price guard disabled.
     function test_exactOutputSingle_hookFundsInput_noMinHopPrice_succeeds() public {
         uint128 amountOut = 1 ether;
@@ -75,7 +54,6 @@ contract V4RouterHookFundedExactOutputTest is RoutingTestHelpers {
             zeroForOne: true,
             amountOut: amountOut,
             amountInMaximum: type(uint128).max,
-            minHopPriceX36: 0,
             hookData: bytes("")
         });
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
@@ -143,7 +121,6 @@ contract V4RouterHookFundedExactOutputTest is RoutingTestHelpers {
             zeroForOne: true,
             amountOut: 1 ether,
             amountInMaximum: type(uint128).max,
-            minHopPriceX36: 0,
             hookData: bytes("")
         });
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
@@ -172,32 +149,6 @@ contract V4RouterHookFundedExactOutputTest is RoutingTestHelpers {
         router.executeActions(data);
     }
 
-    /// @notice The zero-input branch is a boundary, so pin it: with an unsatisfiable price bound only a
-    ///         full subsidy clears the guard, because only then is the realized price infinite. Any
-    ///         partial subsidy leaves a finite price that must still be enforced.
-    function testFuzz_exactOutputSingle_onlyFullSubsidyClearsPriceBound(uint256 subsidyBps) public {
-        subsidyBps = bound(subsidyBps, 0, 10_000);
-        MockFullySubsidizingHook(hookAddr).setSubsidyBps(subsidyBps);
-
-        IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams({
-            poolKey: hookKey,
-            zeroForOne: true,
-            amountOut: 1 ether,
-            amountInMaximum: type(uint128).max,
-            minHopPriceX36: type(uint256).max,
-            hookData: bytes("")
-        });
-        plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
-        bytes memory data = plan.finalizeSwap(currency0, currency1, ActionConstants.MSG_SENDER);
-
-        if (subsidyBps == 10_000) {
-            router.executeActions(data);
-        } else {
-            vm.expectPartialRevert(IV4Router.V4TooMuchRequestedPerHopSingle.selector);
-            router.executeActions(data);
-        }
-    }
-
     /// @notice The other side of the boundary: any surplus at all, down to a single wei, is rejected.
     ///         Documents current behavior; the boundary itself is what this fix moved.
     function testFuzz_exactOutputSingle_anyOverfundingReverts(uint128 extraWei) public {
@@ -209,7 +160,6 @@ contract V4RouterHookFundedExactOutputTest is RoutingTestHelpers {
             zeroForOne: true,
             amountOut: 1 ether,
             amountInMaximum: type(uint128).max,
-            minHopPriceX36: 0,
             hookData: bytes("")
         });
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
@@ -256,7 +206,6 @@ contract V4RouterHookFundedExactOutputTest is RoutingTestHelpers {
             zeroForOne: true,
             amountOut: 1 ether,
             amountInMaximum: type(uint128).max,
-            minHopPriceX36: 0,
             hookData: bytes("")
         });
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));

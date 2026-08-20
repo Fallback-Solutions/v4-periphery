@@ -31,9 +31,8 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 expectedAmountOut = 992054607780215625;
 
         // min amount out of 1 higher than the actual amount out
-        IV4Router.ExactInputSingleParams memory params = IV4Router.ExactInputSingleParams(
-            key0, true, uint128(amountIn), uint128(expectedAmountOut + 1), 0, bytes("")
-        );
+        IV4Router.ExactInputSingleParams memory params =
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), uint128(expectedAmountOut + 1), bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
@@ -44,46 +43,12 @@ contract V4RouterTest is RoutingTestHelpers {
         router.executeActions(data);
     }
 
-    function test_swapExactInputSingle_revertsForPerHopSlippage() public {
-        uint256 amountIn = 1 ether;
-        uint256 expectedAmountOut = 992054607780215625;
-
-        uint256 expectedPrice = expectedAmountOut * PRECISION / amountIn;
-
-        IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, expectedPrice + 1, bytes(""));
-
-        plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
-        bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(IV4Router.V4TooLittleReceivedPerHopSingle.selector, expectedPrice + 1, expectedPrice)
-        );
-        router.executeActions(data);
-    }
-
-    function test_swapExactInputSingle_succeedsForPerHopSlippage() public {
-        uint256 amountIn = 1 ether;
-        uint256 expectedAmountOut = 992054607780215625;
-
-        uint256 expectedPrice = expectedAmountOut * PRECISION / amountIn;
-
-        IV4Router.ExactInputSingleParams memory params = IV4Router.ExactInputSingleParams(
-            key0, true, uint128(amountIn), uint128(expectedAmountOut), expectedPrice, bytes("")
-        );
-
-        plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
-        bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
-
-        router.executeActions(data);
-    }
-
     function test_swapExactInputSingle_zeroForOne_takeToMsgSender() public {
         uint256 amountIn = 1 ether;
         uint256 expectedAmountOut = 992054607780215625;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         (
@@ -105,7 +70,7 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 expectedAmountOut = 992054607780215625;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
 
@@ -137,7 +102,7 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 expectedAmountOut = 992054607780215625;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
 
@@ -169,7 +134,7 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 expectedAmountOut = 992054607780215625;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
         plan = plan.add(Actions.SETTLE_ALL, abi.encode(key0.currency0, expectedAmountOut * 12 / 10));
@@ -203,7 +168,7 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 expectedAmountOut = 992054607780215625;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, false, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, false, uint128(amountIn), 0, bytes(""));
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
 
         (
@@ -466,7 +431,7 @@ contract V4RouterTest is RoutingTestHelpers {
 
         // amount in of 0 to show it should use the open delta
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(key0, true, ActionConstants.OPEN_DELTA, 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(key0, true, ActionConstants.OPEN_DELTA, 0, bytes(""));
 
         plan = plan.add(Actions.SETTLE, abi.encode(key0.currency0, ActionConstants.CONTRACT_BALANCE, false));
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -498,7 +463,7 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 expectedAmountOut = 992054607780215625;
 
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(nativeKey, true, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(nativeKey, true, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
 
@@ -522,7 +487,7 @@ contract V4RouterTest is RoutingTestHelpers {
 
         // native output means we need !zeroForOne
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(nativeKey, false, uint128(amountIn), 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(nativeKey, false, uint128(amountIn), 0, bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
 
@@ -658,7 +623,7 @@ contract V4RouterTest is RoutingTestHelpers {
 
         // amount in of 0 to show it should use the open delta
         IV4Router.ExactInputSingleParams memory params =
-            IV4Router.ExactInputSingleParams(nativeKey, true, ActionConstants.OPEN_DELTA, 0, 0, bytes(""));
+            IV4Router.ExactInputSingleParams(nativeKey, true, ActionConstants.OPEN_DELTA, 0, bytes(""));
 
         plan = plan.add(Actions.SETTLE, abi.encode(nativeKey.currency0, ActionConstants.CONTRACT_BALANCE, false));
         plan = plan.add(Actions.SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -689,9 +654,8 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 amountOut = 1 ether;
         uint256 expectedAmountIn = 1008049273448486163;
 
-        IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            key0, true, uint128(amountOut), uint128(expectedAmountIn - 1), 0, bytes("")
-        );
+        IV4Router.ExactOutputSingleParams memory params =
+            IV4Router.ExactOutputSingleParams(key0, true, uint128(amountOut), uint128(expectedAmountIn - 1), bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
@@ -702,48 +666,12 @@ contract V4RouterTest is RoutingTestHelpers {
         router.executeActions(data);
     }
 
-    function test_swapExactOutputSingle_revertsForPerHopSlippage() public {
-        uint256 amountOut = 1 ether;
-        uint256 expectedAmountIn = 1008049273448486163;
-
-        uint256 expectedPrice = amountOut * PRECISION / expectedAmountIn;
-
-        IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            key0, true, uint128(amountOut), type(uint128).max, expectedPrice + 1, bytes("")
-        );
-
-        plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
-        bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(IV4Router.V4TooMuchRequestedPerHopSingle.selector, expectedPrice + 1, expectedPrice)
-        );
-        router.executeActions(data);
-    }
-
-    function test_swapExactOutputSingle_succeedsForPerHopSlippage() public {
-        uint256 amountOut = 1 ether;
-        uint256 expectedAmountIn = 1008049273448486163;
-
-        uint256 expectedPrice = amountOut * PRECISION / expectedAmountIn;
-
-        IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            key0, true, uint128(amountOut), type(uint128).max, expectedPrice, bytes("")
-        );
-
-        plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
-        bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
-
-        router.executeActions(data);
-    }
-
     function test_swapExactOutputSingle_zeroForOne() public {
         uint256 amountOut = 1 ether;
         uint256 expectedAmountIn = 1008049273448486163;
 
-        IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            key0, true, uint128(amountOut), uint128(expectedAmountIn + 1), 0, bytes("")
-        );
+        IV4Router.ExactOutputSingleParams memory params =
+            IV4Router.ExactOutputSingleParams(key0, true, uint128(amountOut), uint128(expectedAmountIn + 1), bytes(""));
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
 
@@ -766,7 +694,7 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 expectedAmountIn = 1008049273448486163;
 
         IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            key0, false, uint128(amountOut), uint128(expectedAmountIn + 1), 0, bytes("")
+            key0, false, uint128(amountOut), uint128(expectedAmountIn + 1), bytes("")
         );
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
@@ -789,7 +717,7 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 expectedAmountIn = 1008049273448486163;
 
         IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            key0, true, ActionConstants.OPEN_DELTA, uint128(expectedAmountIn + 1), 0, bytes("")
+            key0, true, ActionConstants.OPEN_DELTA, uint128(expectedAmountIn + 1), bytes("")
         );
 
         plan = plan.add(Actions.TAKE, abi.encode(key0.currency1, ActionConstants.ADDRESS_THIS, 1 ether));
@@ -1017,7 +945,7 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 expectedAmountIn = 1008049273448486163;
 
         IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            nativeKey, true, uint128(amountOut), uint128(expectedAmountIn + 1), 0, bytes("")
+            nativeKey, true, uint128(amountOut), uint128(expectedAmountIn + 1), bytes("")
         );
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));
@@ -1041,7 +969,7 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 expectedAmountIn = 1008049273448486163;
 
         IV4Router.ExactOutputSingleParams memory params = IV4Router.ExactOutputSingleParams(
-            nativeKey, false, uint128(amountOut), uint128(expectedAmountIn + 1), 0, bytes("")
+            nativeKey, false, uint128(amountOut), uint128(expectedAmountIn + 1), bytes("")
         );
 
         plan = plan.add(Actions.SWAP_EXACT_OUT_SINGLE, abi.encode(params));

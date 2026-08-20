@@ -324,7 +324,6 @@ contract PermissionedDeployers is Test {
             poolKey, // The pool to swap in
             zeroForOne, // Direction of swap
             uint128(amountIn), // Amount to swap in
-            0, // Minimum amount out (0 = no slippage protection)
             0,
             bytes("") // Hook data
         );
