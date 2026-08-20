@@ -1,5 +1,5 @@
 {
-  "V4Router_Bytecode": "10511",
+  "V4Router_Bytecode": "10150",
   "V4Router_ExactIn1Hop_nativeIn": "122326",
   "V4Router_ExactIn1Hop_nativeOut": "120793",
   "V4Router_ExactIn1Hop_oneForZero": "129665",
@@ -8,9 +8,9 @@
   "V4Router_ExactIn2Hops_nativeIn": "179788",
   "V4Router_ExactIn3Hops": "251141",
   "V4Router_ExactIn3Hops_nativeIn": "237277",
-  "V4Router_ExactInputSingle": "134382",
-  "V4Router_ExactInputSingle_nativeIn": "120518",
-  "V4Router_ExactInputSingle_nativeOut": "118963",
+  "V4Router_ExactInputSingle": "134225",
+  "V4Router_ExactInputSingle_nativeIn": "120361",
+  "V4Router_ExactInputSingle_nativeOut": "118806",
   "V4Router_ExactOut1Hop_nativeIn_sweepETH": "128954",
   "V4Router_ExactOut1Hop_nativeOut": "122375",
   "V4Router_ExactOut1Hop_oneForZero": "131247",
@@ -20,8 +20,8 @@
   "V4Router_ExactOut3Hops": "249734",
   "V4Router_ExactOut3Hops_nativeIn": "242816",
   "V4Router_ExactOut3Hops_nativeOut": "226985",
-  "V4Router_ExactOutputSingle": "134076",
-  "V4Router_ExactOutputSingle_nativeIn_sweepETH": "127158",
-  "V4Router_ExactOutputSingle_nativeOut": "120592",
-  "router initcode hash (without constructor params, as uint256)": "13879753072957690329751490072773068822094176245185708294534882769955974175406"
+  "V4Router_ExactOutputSingle": "133893",
+  "V4Router_ExactOutputSingle_nativeIn_sweepETH": "126975",
+  "V4Router_ExactOutputSingle_nativeOut": "120409",
+  "router initcode hash (without constructor params, as uint256)": "32681308238671699061587866324361435268335720230069036260080330004094992373477"
 }
