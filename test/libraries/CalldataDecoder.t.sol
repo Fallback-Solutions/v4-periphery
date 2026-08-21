@@ -113,7 +113,14 @@ contract CalldataDecoderTest is Test {
         assertEq(swapParams.amountIn, _swapParams.amountIn);
         assertEq(swapParams.amountOutMinimum, _swapParams.amountOutMinimum);
         _assertEq(swapParams.path, _swapParams.path);
-        _assertEq(swapParams.maxHopSlippage, _swapParams.maxHopSlippage);
+        _assertEq(swapParams.minHopPriceX36, _swapParams.minHopPriceX36);
+    }
+
+    function test_decodeSwapExactInParams_minLengthBoundary() public {
+        // 0xdf = 0xe0 - 1, one byte below the minimum — should revert
+        bytes memory params = new bytes(0xdf);
+        vm.expectRevert(CalldataDecoder.SliceOutOfBounds.selector);
+        decoder.decodeSwapExactInParams(params);
     }
 
     function test_fuzz_decodeSwapExactInSingleParams(IV4Router.ExactInputSingleParams calldata _swapParams)
@@ -138,7 +145,14 @@ contract CalldataDecoderTest is Test {
         assertEq(swapParams.amountOut, _swapParams.amountOut);
         assertEq(swapParams.amountInMaximum, _swapParams.amountInMaximum);
         _assertEq(swapParams.path, _swapParams.path);
-        _assertEq(swapParams.maxHopSlippage, _swapParams.maxHopSlippage);
+        _assertEq(swapParams.minHopPriceX36, _swapParams.minHopPriceX36);
+    }
+
+    function test_decodeSwapExactOutParams_minLengthBoundary() public {
+        // 0xdf = 0xe0 - 1, one byte below the minimum — should revert
+        bytes memory params = new bytes(0xdf);
+        vm.expectRevert(CalldataDecoder.SliceOutOfBounds.selector);
+        decoder.decodeSwapExactOutParams(params);
     }
 
     function test_fuzz_decodeSwapExactOutSingleParams(IV4Router.ExactOutputSingleParams calldata _swapParams)

@@ -12,9 +12,9 @@ import {ActionConstants} from "../libraries/ActionConstants.sol";
 abstract contract DeltaResolver is ImmutableState {
     using TransientStateLibrary for IPoolManager;
 
-    /// @notice Emitted trying to settle a positive delta.
+    /// @notice Emitted when unexpected negative delta is found.
     error DeltaNotPositive(Currency currency);
-    /// @notice Emitted trying to take a negative delta.
+    /// @notice Emitted when unexpected positive delta is found.
     error DeltaNotNegative(Currency currency);
     /// @notice Emitted when the contract does not have enough balance to wrap or unwrap.
     error InsufficientBalance();
@@ -24,7 +24,7 @@ abstract contract DeltaResolver is ImmutableState {
     /// @param recipient Address to receive the currency
     /// @param amount Amount to take
     /// @dev Returns early if the amount is 0
-    function _take(Currency currency, address recipient, uint256 amount) internal {
+    function _take(Currency currency, address recipient, uint256 amount) internal virtual {
         if (amount == 0) return;
         poolManager.take(currency, recipient, amount);
     }
@@ -76,7 +76,7 @@ abstract contract DeltaResolver is ImmutableState {
     }
 
     /// @notice Calculates the amount for a settle action
-    function _mapSettleAmount(uint256 amount, Currency currency) internal view returns (uint256) {
+    function _mapSettleAmount(uint256 amount, Currency currency) internal view virtual returns (uint256) {
         if (amount == ActionConstants.CONTRACT_BALANCE) {
             return currency.balanceOfSelf();
         } else if (amount == ActionConstants.OPEN_DELTA) {

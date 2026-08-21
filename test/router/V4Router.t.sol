@@ -7,8 +7,14 @@ import {RoutingTestHelpers} from "../shared/RoutingTestHelpers.sol";
 import {Planner} from "../shared/Planner.sol";
 import {Actions} from "../../src/libraries/Actions.sol";
 import {ActionConstants} from "../../src/libraries/ActionConstants.sol";
+import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
+import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
+import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
+import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
+import {ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 
 contract V4RouterTest is RoutingTestHelpers {
+    uint256 constant PRECISION = 1e36;
     address alice = makeAddr("ALICE");
 
     function setUp() public {
@@ -201,21 +207,21 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 amountIn = 1 ether;
         uint256 expectedAmountOut = 992054607780215625;
 
-        uint256 expectedPrice = amountIn * 1e18 / expectedAmountOut;
-        uint256[] memory maxSlippages = new uint256[](1);
-        uint256 maxSlippage = expectedPrice - 1;
-        maxSlippages[0] = maxSlippage;
+        uint256 expectedPrice = expectedAmountOut * PRECISION / amountIn;
+        uint256[] memory minPricesX36 = new uint256[](1);
+        uint256 minPrice = expectedPrice + 1;
+        minPricesX36[0] = minPrice;
 
         tokenPath.push(currency0);
         tokenPath.push(currency1);
-        IV4Router.ExactInputParams memory params = _getExactInputParams(tokenPath, maxSlippages, amountIn);
+        IV4Router.ExactInputParams memory params = _getExactInputParams(tokenPath, minPricesX36, amountIn);
         params.amountOutMinimum = uint128(0);
 
         plan = plan.add(Actions.SWAP_EXACT_IN, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
 
         vm.expectRevert(
-            abi.encodeWithSelector(IV4Router.V4TooLittleReceivedPerHop.selector, 0, maxSlippage, expectedPrice)
+            abi.encodeWithSelector(IV4Router.V4TooLittleReceivedPerHop.selector, 0, minPrice, expectedPrice)
         );
         router.executeActions(data);
     }
@@ -224,19 +230,90 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 amountIn = 1 ether;
         uint256 expectedAmountOut = 992054607780215625;
 
-        uint256 expectedPrice = amountIn * 1e18 / expectedAmountOut;
-        uint256[] memory maxSlippages = new uint256[](1);
-        uint256 maxSlippage = expectedPrice;
-        maxSlippages[0] = maxSlippage;
+        uint256 expectedPrice = expectedAmountOut * PRECISION / amountIn;
+        uint256[] memory minPricesX36 = new uint256[](1);
+        uint256 minPriceX36 = expectedPrice;
+        minPricesX36[0] = minPriceX36;
 
         tokenPath.push(currency0);
         tokenPath.push(currency1);
-        IV4Router.ExactInputParams memory params = _getExactInputParams(tokenPath, maxSlippages, amountIn);
+        IV4Router.ExactInputParams memory params = _getExactInputParams(tokenPath, minPricesX36, amountIn);
         params.amountOutMinimum = uint128(expectedAmountOut);
 
         plan = plan.add(Actions.SWAP_EXACT_IN, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
 
+        router.executeActions(data);
+    }
+
+    // Regression test: with PRECISION = 1e18, the price truncates to 0 for extreme ratios, disabling the check.
+    function test_swapExactInput_extremeRatioPerHopSlippage() public {
+        // Create a pool at extreme price: ~1e22 token1 per token0 (simulates WBTC/PEPE-like ratio)
+        int24 extremeTick = 506520;
+        uint160 extremeSqrtPrice = TickMath.getSqrtPriceAtTick(extremeTick);
+
+        MockERC20 tokenA = new MockERC20("A", "A", 18);
+        MockERC20 tokenB = new MockERC20("B", "B", 18);
+        tokenA.mint(address(this), 2 ** 128);
+        tokenB.mint(address(this), 2 ** 128);
+        tokenA.approve(address(router), type(uint256).max);
+        tokenB.approve(address(router), type(uint256).max);
+        tokenA.approve(address(positionManager), type(uint256).max);
+        tokenB.approve(address(positionManager), type(uint256).max);
+
+        Currency currA = Currency.wrap(address(tokenA));
+        Currency currB = Currency.wrap(address(tokenB));
+        if (Currency.unwrap(currA) > Currency.unwrap(currB)) {
+            (currA, currB) = (currB, currA);
+        }
+
+        PoolKey memory extremeKey = PoolKey(currA, currB, 3000, 60, IHooks(address(0)));
+        manager.initialize(extremeKey, extremeSqrtPrice);
+        positionManager.modifyLiquidity(
+            extremeKey, ModifyLiquidityParams(extremeTick - 600, extremeTick + 600, 100 ether, 0), "0x"
+        );
+
+        // Swap currB -> currA (token1 -> token0): output is tiny relative to input at this extreme tick.
+        uint256 amountIn = 1e26;
+        Currency[] memory path = new Currency[](2);
+        path[0] = currB;
+        path[1] = currA;
+
+        // Snapshot state so the first swap doesn't drain liquidity for the second
+        uint256 snap = vm.snapshotState();
+
+        // First swap without per-hop slippage to discover actual amountOut
+        IV4Router.ExactInputParams memory params = _getExactInputParams(path, amountIn);
+        plan = Planner.init();
+        plan = plan.add(Actions.SWAP_EXACT_IN, abi.encode(params));
+        bytes memory data = plan.finalizeSwap(currB, currA, ActionConstants.MSG_SENDER);
+
+        uint256 outputBefore = currA.balanceOfSelf();
+        router.executeActions(data);
+        uint256 actualAmountOut = currA.balanceOfSelf() - outputBefore;
+
+        // With 1e18 precision, the price truncates to 0 for this extreme ratio.
+        assertEq(actualAmountOut * 1e18 / amountIn, 0, "1e18 precision should truncate to zero");
+        // 1e36 precision preserves enough resolution.
+        uint256 expectedPrice = actualAmountOut * PRECISION / amountIn;
+        assertGt(expectedPrice, 0, "price should be non-zero");
+
+        // Restore state for the slippage test
+        vm.revertToState(snap);
+
+        // Verify the per-hop slippage check fires for extreme ratio pairs
+        uint256[] memory minPricesX36 = new uint256[](1);
+        minPricesX36[0] = expectedPrice + 1;
+
+        IV4Router.ExactInputParams memory params2 = _getExactInputParams(path, minPricesX36, amountIn);
+        params2.amountOutMinimum = 0;
+        plan = Planner.init();
+        plan = plan.add(Actions.SWAP_EXACT_IN, abi.encode(params2));
+        data = plan.finalizeSwap(currB, currA, ActionConstants.MSG_SENDER);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IV4Router.V4TooLittleReceivedPerHop.selector, 0, expectedPrice + 1, expectedPrice)
+        );
         router.executeActions(data);
     }
 
@@ -687,22 +764,20 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 amountOut = 1 ether;
         uint256 expectedAmountIn = 1008049273448486163;
 
-        uint256 expectedPrice = expectedAmountIn * 1e18 / amountOut;
-        uint256[] memory maxSlippages = new uint256[](1);
-        uint256 maxSlippage = expectedPrice - 1;
-        maxSlippages[0] = maxSlippage;
+        uint256 expectedPrice = amountOut * PRECISION / expectedAmountIn;
+        uint256[] memory minPricesX36 = new uint256[](1);
+        uint256 minPrice = expectedPrice + 1;
+        minPricesX36[0] = minPrice;
 
         tokenPath.push(currency0);
         tokenPath.push(currency1);
-        IV4Router.ExactOutputParams memory params = _getExactOutputParams(tokenPath, maxSlippages, amountOut);
+        IV4Router.ExactOutputParams memory params = _getExactOutputParams(tokenPath, minPricesX36, amountOut);
         params.amountInMaximum = type(uint128).max;
 
         plan = plan.add(Actions.SWAP_EXACT_OUT, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key0.currency0, key0.currency1, ActionConstants.MSG_SENDER);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IV4Router.V4TooMuchRequestedPerHop.selector, 0, maxSlippage, expectedPrice)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooMuchRequestedPerHop.selector, 0, minPrice, expectedPrice));
         router.executeActions(data);
     }
 
@@ -710,14 +785,14 @@ contract V4RouterTest is RoutingTestHelpers {
         uint256 amountOut = 1 ether;
         uint256 expectedAmountIn = 1008049273448486163;
 
-        uint256 expectedPrice = expectedAmountIn * 1e18 / amountOut;
-        uint256[] memory maxSlippages = new uint256[](1);
-        uint256 maxSlippage = expectedPrice;
-        maxSlippages[0] = maxSlippage;
+        uint256 expectedPrice = amountOut * PRECISION / expectedAmountIn;
+        uint256[] memory minPricesX36 = new uint256[](1);
+        uint256 minPriceX36 = expectedPrice;
+        minPricesX36[0] = minPriceX36;
 
         tokenPath.push(currency0);
         tokenPath.push(currency1);
-        IV4Router.ExactOutputParams memory params = _getExactOutputParams(tokenPath, maxSlippages, amountOut);
+        IV4Router.ExactOutputParams memory params = _getExactOutputParams(tokenPath, minPricesX36, amountOut);
         params.amountInMaximum = type(uint128).max;
 
         plan = plan.add(Actions.SWAP_EXACT_OUT, abi.encode(params));

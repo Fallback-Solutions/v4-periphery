@@ -27,11 +27,11 @@ abstract contract V4Router is IV4Router, BaseActionsRouter, DeltaResolver {
     using CalldataDecoder for bytes;
     using BipsLibrary for uint256;
 
-    uint256 private constant PRECISION = 1e18;
+    uint256 private constant PRECISION = 1e36;
 
     constructor(IPoolManager _poolManager) BaseActionsRouter(_poolManager) {}
 
-    function _handleAction(uint256 action, bytes calldata params) internal override {
+    function _handleAction(uint256 action, bytes calldata params) internal virtual override {
         // swap actions and payment actions in different blocks for gas efficiency
         if (action < Actions.SETTLE) {
             if (action == Actions.SWAP_EXACT_IN) {
@@ -87,8 +87,9 @@ abstract contract V4Router is IV4Router, BaseActionsRouter, DeltaResolver {
             amountIn =
                 _getFullCredit(params.zeroForOne ? params.poolKey.currency0 : params.poolKey.currency1).toUint128();
         }
-        uint128 amountOut =
-            _swap(params.poolKey, params.zeroForOne, -int256(uint256(amountIn)), params.hookData).toUint128();
+        uint128 amountOut = _swapOutput(
+            _swap(params.poolKey, params.zeroForOne, -int256(uint256(amountIn)), params.hookData), params.zeroForOne
+        );
         if (amountOut < params.amountOutMinimum) revert V4TooLittleReceived(params.amountOutMinimum, amountOut);
     }
 
@@ -102,19 +103,21 @@ abstract contract V4Router is IV4Router, BaseActionsRouter, DeltaResolver {
             if (amountIn == ActionConstants.OPEN_DELTA) amountIn = _getFullCredit(currencyIn).toUint128();
             PathKey calldata pathKey;
 
-            uint256 perHopSlippageLength = params.maxHopSlippage.length;
-            if (perHopSlippageLength != 0 && perHopSlippageLength != pathLength) revert InvalidHopSlippageLength();
+            uint256 perHopPriceLength = params.minHopPriceX36.length;
+            if (perHopPriceLength != 0 && perHopPriceLength != pathLength) revert InvalidHopPriceLength();
 
             for (uint256 i = 0; i < pathLength; i++) {
                 pathKey = params.path[i];
                 (PoolKey memory poolKey, bool zeroForOne) = pathKey.getPoolAndSwapDirection(currencyIn);
-                // The output delta will always be positive, except for when interacting with certain hook pools
-                amountOut = _swap(poolKey, zeroForOne, -int256(uint256(amountIn)), pathKey.hookData).toUint128();
+                // The output delta is positive for ordinary pools. A hook taking more than the whole
+                // output can drive it negative, which is unsupported: _swapOutput reverts on the cast.
+                amountOut =
+                    _swapOutput(_swap(poolKey, zeroForOne, -int256(uint256(amountIn)), pathKey.hookData), zeroForOne);
 
-                if (perHopSlippageLength != 0) {
-                    uint256 price = amountIn * PRECISION / amountOut;
-                    uint256 maxSlippage = params.maxHopSlippage[i];
-                    if (price > maxSlippage) revert V4TooLittleReceivedPerHop(i, maxSlippage, price);
+                if (perHopPriceLength != 0) {
+                    uint256 priceX36 = amountOut * PRECISION / amountIn;
+                    uint256 minPrice = params.minHopPriceX36[i];
+                    if (priceX36 < minPrice) revert V4TooLittleReceivedPerHop(i, minPrice, priceX36);
                 }
 
                 amountIn = amountOut;
@@ -131,10 +134,13 @@ abstract contract V4Router is IV4Router, BaseActionsRouter, DeltaResolver {
             amountOut =
                 _getFullDebt(params.zeroForOne ? params.poolKey.currency1 : params.poolKey.currency0).toUint128();
         }
-        uint128 amountIn = (uint256(
-                -int256(_swap(params.poolKey, params.zeroForOne, int256(uint256(amountOut)), params.hookData))
-            ))
-        .toUint128();
+        BalanceDelta delta = _swap(params.poolKey, params.zeroForOne, int256(uint256(amountOut)), params.hookData);
+        // exact output is all-or-nothing: a pool can deliver less than requested if it runs out of
+        // liquidity before the price limit. Reverting on a shortfall keeps "exact output" exact;
+        // over-delivery (possible only via hook pools) is allowed.
+        uint128 amountOutActual = _swapOutput(delta, params.zeroForOne);
+        if (amountOutActual < amountOut) revert V4ExactOutputUnfilled(amountOut, amountOutActual);
+        uint128 amountIn = _swapInput(delta, params.zeroForOne);
         if (amountIn > params.amountInMaximum) revert V4TooMuchRequested(params.amountInMaximum, amountIn);
     }
 
@@ -151,21 +157,38 @@ abstract contract V4Router is IV4Router, BaseActionsRouter, DeltaResolver {
                 amountOut = _getFullDebt(currencyOut).toUint128();
             }
 
-            uint256 perHopSlippageLength = params.maxHopSlippage.length;
-            if (perHopSlippageLength != 0 && perHopSlippageLength != pathLength) revert InvalidHopSlippageLength();
+            uint256 perHopPriceLength = params.minHopPriceX36.length;
+            if (perHopPriceLength != 0 && perHopPriceLength != pathLength) revert InvalidHopPriceLength();
 
             for (uint256 i = pathLength; i > 0; i--) {
                 pathKey = params.path[i - 1];
                 (PoolKey memory poolKey, bool oneForZero) = pathKey.getPoolAndSwapDirection(currencyOut);
-                // The output delta will always be negative, except for when interacting with certain hook pools
-                amountIn = (uint256(-int256(_swap(poolKey, !oneForZero, int256(uint256(amountOut)), pathKey.hookData))))
-                .toUint128();
-
-                if (perHopSlippageLength != 0) {
-                    uint256 price = amountIn * PRECISION / amountOut;
-                    uint256 maxSlippage = params.maxHopSlippage[i - 1];
-                    if (price > maxSlippage) revert V4TooMuchRequestedPerHop(i - 1, maxSlippage, price);
+                // The output delta is positive for ordinary pools. A hook taking more than the whole
+                // output can drive it negative, which is unsupported: _swapOutput reverts on the cast.
+                BalanceDelta delta = _swap(poolKey, !oneForZero, int256(uint256(amountOut)), pathKey.hookData);
+                uint128 amountOutActual = _swapOutput(delta, !oneForZero);
+                // Every hop must fill. PoolManager nets one delta per currency across the whole unlock,
+                // so an intermediate shortfall can be absorbed by same-currency credit and settle
+                // silently rather than reverting.
+                if (amountOutActual < amountOut) {
+                    revert V4ExactOutputUnfilled(amountOut, amountOutActual);
                 }
+                amountIn = _swapInput(delta, !oneForZero);
+
+                // a hook can fund the whole input, leaving a positive output against a zero input. The
+                // realized price is then infinite and clears every finite bound, so skip the division
+                // rather than panic.
+                if (perHopPriceLength != 0 && amountIn != 0) {
+                    uint256 priceX36 = uint256(amountOutActual) * PRECISION / amountIn;
+                    uint256 minPrice = params.minHopPriceX36[i - 1];
+                    if (priceX36 < minPrice) revert V4TooMuchRequestedPerHop(i - 1, minPrice, priceX36);
+                }
+                // this hop consumed nothing, so the upstream hops have nothing left to produce. Stop
+                // here: propagating the zero would call swap with amountSpecified == 0, which
+                // PoolManager rejects. The untouched currencies carry no delta, so settlement is a
+                // no-op for them and amountIn of 0 trivially clears amountInMaximum below.
+                // The upstream pools are never swapped, so their hooks never run.
+                if (amountIn == 0) break;
                 amountOut = amountIn;
                 currencyOut = pathKey.intermediateCurrency;
             }
@@ -173,21 +196,43 @@ abstract contract V4Router is IV4Router, BaseActionsRouter, DeltaResolver {
         }
     }
 
+    /// @notice Validates a pool before swapping through it
+    /// @dev No-op by default. Called once per swap, i.e. for every hop of a multi-hop route.
+    ///      Inheriting routers override this to reject pools they must not trade in.
+    function _validatePoolKey(PoolKey memory poolKey) internal view virtual {}
+
     function _swap(PoolKey memory poolKey, bool zeroForOne, int256 amountSpecified, bytes calldata hookData)
         private
-        returns (int128 reciprocalAmount)
+        returns (BalanceDelta delta)
     {
-        // for protection of exactOut swaps, sqrtPriceLimit is not exposed as a feature in this contract
-        unchecked {
-            BalanceDelta delta = poolManager.swap(
-                poolKey,
-                SwapParams(
-                    zeroForOne, amountSpecified, zeroForOne ? TickMath.MIN_SQRT_PRICE + 1 : TickMath.MAX_SQRT_PRICE - 1
-                ),
-                hookData
-            );
+        _validatePoolKey(poolKey);
 
-            reciprocalAmount = (zeroForOne == amountSpecified < 0) ? delta.amount1() : delta.amount0();
-        }
+        // for protection of exactOut swaps, sqrtPriceLimit is not exposed as a feature in this contract
+        delta = poolManager.swap(
+            poolKey,
+            SwapParams(
+                zeroForOne, amountSpecified, zeroForOne ? TickMath.MIN_SQRT_PRICE + 1 : TickMath.MAX_SQRT_PRICE - 1
+            ),
+            hookData
+        );
+    }
+
+    /// @notice The positive input amount a swap consumed, derived from its balance delta.
+    /// @dev The spent currency's delta is negative (owed to the pool), so negate it to a positive amount.
+    ///      A hook can pay the input on the caller's behalf. Funding it exactly leaves a zero delta,
+    ///      which negates harmlessly to an input of zero and is supported. Paying MORE leaves a positive
+    ///      delta (a credit) whose owner is undefined in a route; that is intentionally unsupported and
+    ///      reverts SafeCastOverflow, since negating it wraps to ~2^256.
+    function _swapInput(BalanceDelta delta, bool zeroForOne) private pure returns (uint128) {
+        return (uint256(-int256(zeroForOne ? delta.amount0() : delta.amount1()))).toUint128();
+    }
+
+    /// @notice The positive output amount a swap produced, derived from its balance delta. For an
+    ///         exact-output swap this is the REALIZED output, which can be less than the requested
+    ///         amount when the pool lacks the liquidity to fill it before the price limit.
+    /// @dev A hook taking more than the whole output leaves a negative delta. That is unsupported: the
+    ///      cast reverts SafeCastOverflow rather than treating the caller as owing the output currency.
+    function _swapOutput(BalanceDelta delta, bool zeroForOne) private pure returns (uint128) {
+        return (zeroForOne ? delta.amount1() : delta.amount0()).toUint128();
     }
 }
